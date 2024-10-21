@@ -10,14 +10,30 @@
 
         function handleCredentialResponse(response) {
             var responsePayload = response.credential;
-            var profile = response.clientId;
 
-            // Display the Google token and logged-in user's name on the screen
+            // Display the Google token on the screen
             document.getElementById("token").textContent = "Google Token: " + responsePayload;
-            document.getElementById("name").textContent = "Logged-in user: " + profile;
 
-            // Enable the sign-out button
-            document.getElementById("signout").disabled = false;
+            // Now we need to retrieve the user's profile
+            fetchUserProfile(responsePayload);
+        }
+
+        function fetchUserProfile(token) {
+            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("name").textContent = "Logged-in user: " + data.name;
+
+                // Here you can access the userId (sub)
+                console.log("User ID (GID):", data.sub); // This is the user's GID
+            })
+            .catch(error => {
+                console.error('Error fetching user profile:', error);
+            });
         }
 
         function handleSignOut() {
@@ -34,7 +50,8 @@
         function initializeGoogleSignIn() {
             gapi.load('auth2', function () {
                 gapi.auth2.init({
-                    client_id: '144895597889-kbgnm8o4ogn2e67grfiaklfmqnjt7u2s.apps.googleusercontent.com'
+                    client_id: '144895597889-kbgnm8o4ogn2e67grfiaklfmqnjt7u2s.apps.googleusercontent.com',
+                    scope: 'https://www.googleapis.com/auth/chat.readonly https://www.googleapis.com/auth/userinfo.profile'
                 }).then(function () {
                     auth2 = gapi.auth2.getAuthInstance();
 
